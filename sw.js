@@ -1,5 +1,5 @@
 /* Cadência — service worker: guarda o app no aparelho e abre sem internet. */
-const CACHE = "cadencia-v1";
+const CACHE = "cadencia-v2";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
 

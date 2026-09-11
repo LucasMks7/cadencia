@@ -33,7 +33,7 @@ Dá para fazer tudo pelo navegador do próprio celular.
 
 Pronto: o ícone aparece na gaveta de apps e, a partir da segunda abertura, funciona em modo avião.
 
-Para atualizar o app depois, substitua o `index.html` no repositório e troque `cadencia-v1` por `cadencia-v2` dentro do `sw.js` — sem isso o celular continua servindo a versão em cache.
+Para atualizar o app depois, substitua o `index.html` no repositório e incremente o número de versão dentro do `sw.js` (ex.: `cadencia-v2` → `cadencia-v3`) — sem isso o celular continua servindo a versão em cache.
 
 ## Caminho B — 100% local, sem nuvem (Termux)
 
