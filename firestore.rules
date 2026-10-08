@@ -1,0 +1,26 @@
+rules_version = '2';
+// Cada pessoa só lê e escreve os próprios dados: users/{seu uid} e as cópias diárias dentro dele.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) { return request.auth != null && request.auth.uid == uid; }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['data', 'updatedAt', 'device', 'v'])
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 900000;
+
+      match /backups/{day} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && request.resource.data.keys().hasOnly(['data', 'at'])
+          && request.resource.data.data is string
+          && request.resource.data.data.size() < 900000;
+      }
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}
