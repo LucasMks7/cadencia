@@ -5,6 +5,9 @@
   "hosting": {
     "public": ".",
     "ignore": [
+      ".firebase/**",
+      "**/.git/**",
+      ".git/**",
       "firebase.json",
       "firestore.rules",
       ".firebaserc",
