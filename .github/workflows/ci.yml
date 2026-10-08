@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Build e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # o emulador do Firestore roda na JVM
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+
+      - name: cloud.js versionado bate com o código-fonte
+        run: npm run build && git diff --exit-code -- cloud.js
+
+      - name: Ganchos do index.html aplicados (e script idempotente)
+        run: npm run patch && git diff --exit-code -- index.html
+
+      - name: Testes unitários da sincronização
+        run: npm run test:unit
+
+      - name: Testes das regras de segurança (emulador do Firestore)
+        run: npm run test:rules
