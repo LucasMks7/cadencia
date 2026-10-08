@@ -1,2 +1,7 @@
 * text=auto eol=lf
 *.png binary
+
+# Arquivos gerados: ficam fora das estatísticas de linguagem do GitHub e aparecem recolhidos nos diffs.
+# index.html = bundle React compilado (+ ganchos de scripts/patch-index.mjs); cloud.js = saída de `npm run build`.
+index.html linguist-generated
+cloud.js   linguist-generated
