@@ -1,63 +1,95 @@
+<div align="center">
+
+<img src="icon-192.png" width="88" alt="Ícone do Cadência">
+
 # Cadência
 
-Projeta quando você termina cada curso, livro ou matéria, a partir da sua meta diária e do ritmo que você sustenta de verdade.
+**Projeta quando você termina cada curso, livro ou matéria — a partir da sua meta diária e do ritmo que você sustenta de verdade.**
 
-O app é um PWA: um site que o Android instala como aplicativo. Ícone na gaveta, tela cheia sem barra de navegador, funciona sem internet e guarda os dados no próprio aparelho.
+[![CI](https://github.com/lucasmks7/cadencia/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasmks7/cadencia/actions/workflows/ci.yml)
+![PWA](https://img.shields.io/badge/PWA-instalável%20e%20offline-5FE3B4)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-FFCA28?logo=firebase&logoColor=black)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+[![Licença MIT](https://img.shields.io/badge/licença-MIT-A492FF)](LICENSE)
 
-**Demo:** [lucasmks7.github.io/cadencia](https://lucasmks7.github.io/cadencia/)
+[**Abrir o app**](https://cadencia-app-lm.web.app) · [Espelho no GitHub Pages](https://lucasmks7.github.io/cadencia/) · [Arquitetura](docs/ARQUITETURA.md) · [Sincronização](docs/SINCRONIZACAO.md)
 
-Stack: React + CSS puro, empacotado com esbuild em um único `index.html` autocontido (sem build step para rodar, sem dependências externas em runtime). Instalável como PWA (manifest + service worker), 100% client-side — os dados nunca saem do aparelho.
+</div>
 
-## Arquivos
+<p align="center">
+  <img src="docs/img/hoje.png" width="200" alt="Tela Hoje: próxima conclusão, semana e metas do dia">
+  <img src="docs/img/trilhas.png" width="200" alt="Tela Trilhas: data prevista de cada trilha e alerta de ritmo">
+  <img src="docs/img/detalhe.png" width="200" alt="Detalhe da trilha: registro do dia, últimos 14 dias e linha do tempo">
+  <img src="docs/img/ajustes-conta.png" width="200" alt="Ajustes: conta Google conectada, status de sincronização e cópias diárias">
+</p>
 
-| arquivo | o que é |
+## O problema
+
+Planilhas e apps de hábito dizem *quanto* você estudou, mas não *quando* você vai terminar. O Cadência responde a essa pergunta para cada trilha (um curso, um livro, uma matéria) e compara a data **planejada** com a data que o seu **ritmo real** indica, avisando cedo quando as duas começam a se afastar.
+
+## Funcionalidades
+
+- **Projeção de término** por trilha, contando só os dias da semana em que você estuda e descontando o que já foi feito hoje.
+- **Ritmo real × meta:** média móvel exponencial dos últimos 21 dias, com faixa otimista/pessimista e alerta ("no ritmo real, 54 dias mais tarde").
+- **Simulador:** escolha o ritmo e veja a data, ou escolha a data e veja o ritmo necessário. Nada é salvo até você aplicar.
+- **Agenda** mensal com o que foi registrado e o que está planejado.
+- **Login com Google e sincronização em tempo real** entre celular, tablet e computador.
+- **Funciona offline:** as alterações entram numa fila e sobem quando a internet volta.
+- **Mesclagem de conflitos** quando dois aparelhos editaram offline, sem perder registros.
+- **Cópias diárias automáticas na nuvem** (últimos 30 dias), restauráveis pelo app.
+- **Instalável como app** (PWA), em tela cheia, com ícone na tela inicial.
+- **Microinterações:** entrada em cascata, barras que deslizam, confete e vibração ao bater a meta. Tudo respeita *reduzir movimento*.
+
+## Stack
+
+| Camada | Tecnologia |
 |---|---|
-| `index.html` | o app inteiro (React, CSS e lógica já embutidos, 210 KB) |
-| `manifest.webmanifest` | nome, cores e ícones usados na instalação |
-| `sw.js` | service worker: guarda o app no aparelho para abrir offline |
-| `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | ícones |
+| Interface | React 18, CSS puro, fonte Nunito embutida; empacotada com **esbuild** num único `index.html` |
+| Autenticação | **Firebase Authentication** (provedor Google; popup com fallback para redirect) |
+| Banco de dados | **Cloud Firestore** com cache persistente offline (IndexedDB) e listener em tempo real |
+| Segurança | **Firestore Security Rules** com validação de dono, esquema e tamanho |
+| Offline / instalação | **Service Worker** próprio (*stale-while-revalidate*) + Web App Manifest |
+| Hospedagem | **Firebase Hosting** (principal) e **GitHub Pages** (espelho) |
+| Testes | `node:test` (unitários) + `@firebase/rules-unit-testing` no **emulador do Firestore** |
+| CI | **GitHub Actions**: build reproduzível, verificação dos ganchos, testes unitários e de regras |
 
-Os seis arquivos precisam ficar na **mesma pasta**.
+## Arquitetura
 
----
-
-## Caminho A — GitHub Pages (recomendado)
-
-Dá para fazer tudo pelo navegador do próprio celular.
-
-1. Em `github.com`, crie um repositório novo, público, chamado `cadencia`.
-2. **Add file → Upload files** e envie os seis arquivos. Commit.
-3. **Settings → Pages → Build and deployment**: Source = *Deploy from a branch*, Branch = `main`, pasta `/ (root)`. Salve e espere cerca de um minuto.
-4. Abra `https://SEU-USUARIO.github.io/cadencia/` no Chrome do celular.
-5. Menu **⋮ → Instalar aplicativo** (ou *Adicionar à tela inicial*).
-
-Pronto: o ícone aparece na gaveta de apps e, a partir da segunda abertura, funciona em modo avião.
-
-Para atualizar o app depois, substitua o `index.html` no repositório e incremente o número de versão dentro do `sw.js` (ex.: `cadencia-v2` → `cadencia-v3`) — sem isso o celular continua servindo a versão em cache.
-
-## Caminho B — 100% local, sem nuvem (Termux)
-
-Instalar como aplicativo exige um contexto seguro. `file://` e `http://192.168.x.x` não servem, mas **`localhost` serve** — então um servidor rodando no próprio celular resolve.
-
-```bash
-pkg install python            # uma vez
-cd /caminho/da/pasta/cadencia
-python -m http.server 8080
+```mermaid
+flowchart LR
+    subgraph Aparelho["Navegador / app instalado"]
+        UI["index.html<br/>(React, bundle)"]
+        LS[("localStorage<br/>cadencia:v1")]
+        CLOUD["cloud.js<br/>sincronização + conta"]
+        UX["ux.js<br/>microinterações"]
+        SW["sw.js<br/>cache offline"]
+        UI -- "salva (700 ms)" --> LS
+        UI -- "evento cadencia:save" --> CLOUD
+        CLOUD -- "__cad.apply(json)" --> UI
+        UI -- "evento cadencia:goal" --> UX
+    end
+    subgraph Firebase
+        AUTH["Authentication<br/>(Google)"]
+        FS[("Firestore<br/>users/{uid}<br/>users/{uid}/backups/{dia}")]
+    end
+    CLOUD <-- "login" --> AUTH
+    CLOUD <-- "onSnapshot / setDoc<br/>(cache offline)" --> FS
 ```
 
-No Chrome, abra `http://localhost:8080` e instale pelo menu **⋮**. Depois de instalado, o service worker já guardou tudo: pode fechar o Termux que o app continua abrindo.
+A interface original já existia como um bundle React compilado. Em vez de reescrevê-la, a nuvem e as animações foram acopladas por **ganchos pequenos e explícitos**, aplicados por um script idempotente (`scripts/patch-index.mjs`): uma ponte de estado (`window.__cad`), eventos de salvamento e de meta batida, e pontos de montagem na tela. Detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
 
-## Caminho C — só para dar uma olhada
+### Como a sincronização decide
 
-Baixe o `index.html` e abra pelo gerenciador de arquivos. O app roda, mas em `file://` o navegador não permite instalar nem registrar o service worker, e pode descartar os dados salvos. Serve para testar, não para usar.
+Cada aparelho guarda a **base**: a última versão que ele sabe estar igual no aparelho e na nuvem. Quando chega uma versão da nuvem, o núcleo puro [`src/cloud/sync-core.js`](src/cloud/sync-core.js) compara os três lados (um *merge* de três vias):
 
----
+| situação | ação |
+|---|---|
+| só o aparelho mudou desde a base | envia (`push`) |
+| só a nuvem mudou | baixa (`pull`) |
+| os dois mudaram (edição offline em dois aparelhos) | **mescla**: une trilhas e, no mesmo dia, mantém o maior registro |
+| primeiro login no aparelho, com dados dos dois lados | **pergunta** ao usuário: juntar, usar a nuvem ou usar o aparelho |
 
-## Onde ficam os dados
-
-No `localStorage` do navegador, na chave `cadencia:v1`. Ficam no aparelho, não sobem para lugar nenhum. Limpar os dados do Chrome ou desinstalar o app apaga tudo.
-
-Antes de mexer em qualquer coisa, use **Ajustes → Copiar backup**: ele copia um JSON com todas as trilhas e registros. Para voltar, **Ajustes → Restaurar** e cole o texto.
+O algoritmo completo, o modelo de dados e os casos de borda estão em [docs/SINCRONIZACAO.md](docs/SINCRONIZACAO.md).
 
 ## Como a projeção funciona
 
@@ -67,6 +99,76 @@ Antes de mexer em qualquer coisa, use **Ajustes → Copiar backup**: ele copia u
 - **Faixa otimista/pessimista** = ritmo real ± metade do desvio-padrão.
 - **Recalibração** = meta + 0,5 × (meta necessária − meta), com salto limitado a ±25%.
 
+## Segurança e privacidade
+
+- Cada conta só lê e escreve `users/{seu uid}` e as próprias cópias diárias; qualquer outro caminho é negado ([`firestore.rules`](firestore.rules)).
+- As regras validam o esquema (só os campos esperados) e o tamanho do documento, e são cobertas por testes automatizados.
+- As chaves em `firebase-config.js` são identificadores públicos do projeto; a proteção vem das regras.
+- Sem login, nada sai do aparelho. O usuário pode apagar todos os dados da nuvem pelo próprio app.
+
+## Rodando localmente
+
+Requisitos: Node 20+ e, para os testes de regras, Java 11+.
+
+```bash
+git clone https://github.com/lucasmks7/cadencia.git
+cd cadencia
+npm install
+
+npm run serve        # abre o app em http://localhost:5173
+npm test             # testes unitários + regras do Firestore no emulador
+```
+
+Para usar a nuvem com o seu próprio projeto Firebase, siga [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md).
+
+| comando | o que faz |
+|---|---|
+| `npm run build` | gera `cloud.js` a partir de `src/cloud/` (Firebase embutido, sem CDN) |
+| `npm run patch` | (re)aplica os ganchos no `index.html`; rodar duas vezes não muda nada |
+| `npm run test:unit` | testa o núcleo da sincronização (decisão e mesclagem) |
+| `npm run test:rules` | sobe o emulador do Firestore e testa as regras de segurança |
+| `npm run emulators` | Auth + Firestore locais para desenvolver sem tocar na produção |
+| `npm run deploy` | build + publica site e regras no Firebase |
+
+## Estrutura
+
+```
+.
+├── index.html              # app React (bundle) + ganchos de integração
+├── cloud.js                # GERADO: login Google + sincronização (src/cloud)
+├── ux.js                   # microinterações e escala para celular
+├── sw.js                   # service worker (offline, só arquivos do próprio app)
+├── firebase-config.js      # identificadores públicos do projeto Firebase
+├── manifest.webmanifest    # instalação como app
+├── src/cloud/
+│   ├── index.js            # Firebase, ciclo de vida da sessão, interface da conta
+│   └── sync-core.js        # funções puras: decide() e merge()
+├── scripts/
+│   ├── build-cloud.mjs     # esbuild → cloud.js
+│   └── patch-index.mjs     # aplica os ganchos no index.html (idempotente)
+├── tests/
+│   ├── sync-core.test.mjs
+│   └── firestore.rules.test.mjs
+├── firestore.rules         # regras de segurança
+├── firebase.json           # hosting, regras e emuladores
+└── docs/                   # arquitetura, sincronização, configuração e imagens
+```
+
+## Decisões técnicas
+
+- **Firebase em vez de Supabase:** o plano gratuito do Supabase pausa projetos após 7 dias sem uso. O Firestore já traz cache offline com fila de escrita, que este app precisa.
+- **Documento único por usuário (string JSON):** o estado inteiro tem poucos KB. Gravar tudo de uma vez evita escritas parciais inconsistentes e simplifica o *merge* de três vias.
+- **Firebase embutido no `cloud.js` (sem CDN):** o app abre offline desde a primeira instalação, e o carregamento é `defer`, sem atrasar a primeira pintura.
+- **Service worker só para a própria origem:** requisições do Google e do Firestore nunca são servidas do cache, o que evitaria dados antigos.
+- **Login por popup, com redirect como fallback,** e `authDomain` no mesmo domínio do Hosting, para não depender de cookies de terceiros.
+
+## Roadmap
+
+- [ ] Extrair e versionar o código-fonte da interface React (hoje o repositório guarda o bundle compilado).
+- [ ] Deploy automático no Firebase Hosting pelo GitHub Actions.
+- [ ] Mesclagem por campo com carimbo de tempo por trilha, para resolver também edições de título e meta.
+- [ ] Tema claro.
+
 ## Licença
 
-MIT — veja [LICENSE](LICENSE).
+[MIT](LICENSE) © LucasMks7
